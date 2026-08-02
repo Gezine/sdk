@@ -194,7 +194,7 @@ payload_get_args(void) {
  * Entry-point invoked by the ELF loader.
  **/
 int
-_start(payload_args_t *args) {
+__crt_start(payload_args_t *args) {
   int err;
 
   // clear .bss section
