@@ -502,15 +502,15 @@ __kernel_init(payload_args_t* args) {
  **/
 static int
 kernel_write(unsigned long kaddr, void* data, unsigned long len) {
-  kernel_pipebuf_t buf = {
-    .vbuf.kaddr = kaddr
-  };
+  kernel_pipebuf_t buf = {0};
 
   // sanity check for invalid kernel pointers
   if(!(kaddr & 0xffff000000000000)) {
     SET_ERRNO(EFAULT);
     return -1;
   }
+
+  buf.vbuf.kaddr = kaddr;
 
   if(__crt_syscall(SYS_setsockopt, MASTER_SOCK, IPPROTO_IPV6, IPV6_PKTINFO,
 		   &buf, sizeof(buf))) {
@@ -528,14 +528,14 @@ kernel_write(unsigned long kaddr, void* data, unsigned long len) {
 
 int
 kernel_copyin(const void *uaddr, unsigned long kaddr, unsigned long len) {
-  kernel_pipebuf_t buf = {
-    .flags.reserved = 0x40000000
-  };
+  kernel_pipebuf_t buf = {0};
 
   if(!kaddr || !uaddr || !len) {
     SET_ERRNO(EINVAL);
     return -1;
   }
+
+  buf.flags.reserved = 0x40000000;
 
   if(kernel_write(pipe_addr, &buf, sizeof(buf))) {
     return -1;
@@ -559,15 +559,15 @@ kernel_copyin(const void *uaddr, unsigned long kaddr, unsigned long len) {
 
 int
 kernel_copyout(unsigned long kaddr, void *uaddr, unsigned long len) {
-  kernel_pipebuf_t buf = {
-    .flags.cnt = 0x40000000,
-    .flags.in = 0x40000000,
-  };
+  kernel_pipebuf_t buf = {0};
 
   if(!kaddr || !uaddr || !len) {
     SET_ERRNO(EINVAL);
     return -1;
   }
+
+  buf.flags.cnt = 0x40000000;
+  buf.flags.in = 0x40000000;
 
   if(kernel_write(pipe_addr, &buf, sizeof(buf))) {
     return -1;
